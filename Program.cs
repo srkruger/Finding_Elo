@@ -79,6 +79,19 @@ namespace DodoVanOranje.Net
                 double avgScore = totalScore == 0 || nbScores == 0 ? 0 : totalScore / nbScores;
                 double avgDelta = totalDelta == 0 || nbDeltas == 0 ? 0 : totalDelta / nbDeltas;
 
+                //If no(or only one) scores are present, 
+                //zero min and max vars
+                if (nbScores == 0)
+                {
+                    minScore = 0;
+                    maxScore = 0;
+                }
+                if (nbDeltas == 0)
+                {
+                    minDelta = 0;
+                    maxDelta = 0;
+                }
+
                 StreamWriter outputDataset = training ? swTrain : swTest;
                 //Write a line to data set
                 outputDataset.Write(eventId);
