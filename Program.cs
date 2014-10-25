@@ -75,7 +75,7 @@ namespace DodoVanOranje.Net
                 int nbMoves = SAN.Split('.').Length - 1;
 
                 StreamWriter outputDataset = training ? swTrain : swTest;
-                //Write a line to training set
+                //Write a line to data set
                 outputDataset.Write(eventId);
                 outputDataset.Write(',');
                 outputDataset.Write(result);
