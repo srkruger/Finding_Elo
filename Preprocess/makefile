@@ -1,7 +1,7 @@
 
-move_count.csv : count_moves.py
-	python count_moves.py > move_count.csv
+../Processed/move_count.csv : count_moves.py
+	python count_moves.py > ../Processed/move_count.csv
 
 clean :
-	move_count.csv
+	../Processed/move_count.csv
 
