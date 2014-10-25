@@ -32,7 +32,7 @@ test <- test[,-1]
 
 #First move
 #levels = 107 in train
-REDUCE_FIRST_MOVE_LEVELS = 16 #Reduce FirstMove factor. 0 for no reduction
+REDUCE_FIRST_MOVE_LEVELS = 20 #Reduce FirstMove factor. 0 for no reduction
 FIRST_MOVE_ONE_HOT = TRUE #One-hot encode factor
 
 if(REDUCE_FIRST_MOVE_LEVELS > 0)
@@ -71,14 +71,14 @@ set.seed(63951)
 fc <- trainControl(method = "repeatedCV", summaryFunction=MAE,
                    number = 3, repeats = 1, verboseIter=TRUE, 
                    returnResamp="all")
-tGrid <- expand.grid(mtry=5)
-modelW <- train(x=train, y=as.numeric(trainWhiteElo), method="rf", trControl=fc, 
-                tuneGrid=tGrid, metric="MAE", maximize=FALSE, ntree=150)
+tGrid <- expand.grid(n.trees=500, interaction.depth=5:7, shrinkage=0.02)
+modelW <- train(x=train, y=as.numeric(trainWhiteElo), method="gbm", trControl=fc, 
+                tuneGrid=tGrid, metric="MAE", maximize=FALSE)
 modelW
 
 #Another model, for Black this time
-modelB <- train(x=train, y=as.numeric(trainBlackElo), method="rf", trControl=fc, 
-                tuneGrid=tGrid, metric="MAE", maximize=FALSE, ntree=150)
+modelB <- train(x=train, y=as.numeric(trainBlackElo), method="gbm", trControl=fc, 
+                tuneGrid=tGrid, metric="MAE", maximize=FALSE)
 modelB
 
 #Make predictions and create submission file
