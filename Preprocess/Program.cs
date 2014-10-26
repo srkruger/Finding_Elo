@@ -19,12 +19,14 @@ namespace DodoVanOranje.Net
         /// and sf_test.csv dataset files (in same 
         /// directory as input file). Features :
         /// Event,AvgScore,MinScore,MaxScore,
-        /// AvgDelta,MinDelta,MaxDelta
+        /// AvgDelta,MinDelta,MaxDelta,
+        /// LPS(Longest positive streak),
+        /// LNS(Longest negative streak)
         /// </summary>
-        /// <param name="p"></param>
+        /// <param name="p">The path to kaggle's stockfish.csv</param>
         private static void ConvertKaggleStockfishData(string stockfish_csv_path)
         {
-            string header = "Event,AvgScore,MinScore,MaxScore,AvgDelta,MinDelta,MaxDelta";
+            string header = "Event,AvgScore,MinScore,MaxScore,AvgDelta,MinDelta,MaxDelta,LPS,LNS";
             StreamReader sr = File.OpenText(stockfish_csv_path);
             string path = Path.GetDirectoryName(stockfish_csv_path) + Path.DirectorySeparatorChar;
             StreamWriter swTrain = File.CreateText(path + "sf_train.csv");
@@ -49,9 +51,13 @@ namespace DodoVanOranje.Net
                 double minDelta = double.MaxValue;
                 double maxDelta = double.MinValue;
                 double totalDelta = 0;
+                double longestPosStreak = double.MinValue;
+                double longestNegStreak = double.MinValue;
                 //Proces each score string(beware of NA's)
                 int nbScores = 0;
                 int nbDeltas = 0;
+                int posStreak = 0;
+                int negStreak = 0;
                 for (int j = 0; j < scoreTokens.Length; j++)
                 {
                     double score = 0;
@@ -60,6 +66,27 @@ namespace DodoVanOranje.Net
                     minScore = Math.Min(minScore, score);
                     maxScore = Math.Max(maxScore, score);
                     totalScore += score;
+
+                    if (score > 0)
+                    {
+                        posStreak++;
+                        longestNegStreak = Math.Max(negStreak, longestNegStreak);
+                        negStreak = 0;
+                    }
+                    else if (score < 0)
+                    {
+                        negStreak++;
+                        longestPosStreak = Math.Max(posStreak, longestPosStreak);
+                        posStreak = 0;
+                    }
+                    else
+                    {
+                        posStreak = 0;
+                        negStreak = 0;
+                        longestNegStreak = Math.Max(negStreak, longestNegStreak);
+                        longestPosStreak = Math.Max(posStreak, longestPosStreak);
+                    }
+
                     if (j > 0)
                     {
                         if (scoreTokens[j - 1] != "NA")
@@ -76,8 +103,12 @@ namespace DodoVanOranje.Net
                     }
                     nbScores++;
                 }
+                longestNegStreak = Math.Max(negStreak, longestNegStreak);
+                longestPosStreak = Math.Max(posStreak, longestPosStreak);
                 double avgScore = totalScore == 0 || nbScores == 0 ? 0 : totalScore / nbScores;
                 double avgDelta = totalDelta == 0 || nbDeltas == 0 ? 0 : totalDelta / nbDeltas;
+                longestPosStreak = longestPosStreak == 0 || nbScores == 0 ? 0 : longestPosStreak / nbScores;
+                longestNegStreak = longestNegStreak == 0 || nbScores == 0 ? 0 : longestNegStreak / nbScores;
 
                 //If no(or only one) scores are present, 
                 //zero min and max vars
@@ -106,7 +137,11 @@ namespace DodoVanOranje.Net
                 outputDataset.Write(',');
                 outputDataset.Write(minDelta);
                 outputDataset.Write(',');
-                outputDataset.WriteLine(maxDelta);
+                outputDataset.Write(maxDelta);
+                outputDataset.Write(',');
+                outputDataset.Write(longestPosStreak);
+                outputDataset.Write(',');
+                outputDataset.WriteLine(longestNegStreak);
 
                 eventId++;
             }
@@ -126,7 +161,7 @@ namespace DodoVanOranje.Net
         /// NumberOfMoves(move pairs?),WhiteElo(not in test),
         /// BlackElo(not in test)
         /// </summary>
-        /// <param name="data_pgn_path">The path to data.pgn from kaggle</param>
+        /// <param name="data_pgn_path">The path to kaggle's data.pgn</param>
         private static void ConvertKagglePGN(string data_pgn_path)
         {
             StreamReader sr = File.OpenText(data_pgn_path);
