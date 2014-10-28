@@ -56,7 +56,7 @@ if(FIRST_MOVE_ONE_HOT)
     train <- cbind(train, with(train,
                                data.frame(model.matrix(~FirstMove-1,train))))
     test <- cbind(test, with(test,
-                               data.frame(model.matrix(~FirstMove-1,test))))
+                             data.frame(model.matrix(~FirstMove-1,test))))
     #Remove FirstMove
     train <- train[, -2]
     test <- test[, -2]
@@ -83,4 +83,4 @@ modelB
 
 #Make predictions and create submission file
 submit <- data.frame(Event=25001:50000, WhiteElo=predict(modelW, test), BlackElo=predict(modelB, test))
-write.csv(submit, file="submit_rf.csv", row.names=FALSE)
+write.csv(submit, file="submit.csv", row.names=FALSE)
