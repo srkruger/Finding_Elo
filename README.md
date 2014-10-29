@@ -11,7 +11,7 @@ Finding_Elo
 
 Current score (sandbox.R) is 196.17231
 
-To reproduce the score, get _train.csv_, _test.csv_, _sf_train.csv_ and _sf_test_.csv from _/Processed_.
+To reproduce the score, get _train.csv_, _test.csv_, _sf_train.csv_ _sf_test_.csv and _eval.csv_ from _/Processed_.
 Run _sandbox.R_, with your working directory set to where the above files are.
 You'll need the caret package(and gbm, but caret takes care of that if need be).
 
