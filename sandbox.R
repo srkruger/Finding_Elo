@@ -66,6 +66,11 @@ if(FIRST_MOVE_ONE_HOT)
 train <- cbind(train, sf_train)
 test <- cbind(test, sf_test)
 
+#Add material balance and count
+mbcData <- read.csv("eval.csv")
+train <- cbind(train, mbcData[1:25000,])
+test <- cbind(test, mbcData[25001:50000,])
+
 #Build a model, CV to predict WhiteElo
 set.seed(63951)
 fc <- trainControl(method = "repeatedCV", summaryFunction=MAE,
