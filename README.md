@@ -9,7 +9,7 @@ Finding_Elo
 [Rudi Kruger](http://www.kaggle.com/users/54720/rudi-kruger)
 
 
-Current score (sandbox.R) is 196.17231
+Current leaderboard score (see sandbox.R) is 195.51717
 
 To reproduce the score, get _train.csv_, _test.csv_, _sf_train.csv_ _sf_test_.csv and _eval.csv_ from _/Processed_.
 Run _sandbox.R_, with your working directory set to where the above files are.
