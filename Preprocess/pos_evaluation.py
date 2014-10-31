@@ -41,6 +41,7 @@ def evaluate_position(board):
     return score, number_of_pieces
 
 
+limit = False # For debugging
 
 def get_position_features():
     n = 0
@@ -51,6 +52,7 @@ def get_position_features():
                 n += 1
                 moves = line.strip().split()
                 moves.pop() # We don't want the score.
+                number_of_moves = len(move)
                 board = chess.Bitboard()
                 for move in moves:
                     # This is actually an half move.
@@ -59,8 +61,8 @@ def get_position_features():
                 print("{},{}".format(*evaluate_position(board)))
 
             # Limit (for now) the number of games that are explored.
-            # if n == 1:
-            #     break
+            if limit and n == 1:
+                break
 
 
 if __name__ == '__main__':
