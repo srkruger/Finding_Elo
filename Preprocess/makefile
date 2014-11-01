@@ -10,7 +10,7 @@ all : ../Processed/move_count.csv \
 	time python extract_elo.py
 
 ../Processed/positional.csv : pos_evaluation.py
-	time python pos_evaluation.py > ../Processed/pos_evaluation.csv
+	time python pos_evaluation.py > ../Processed/positional.csv
 
 clean :
 	-rm -f ../Processed/move_count.csv

@@ -45,20 +45,26 @@ limit = False # For debugging
 
 def get_position_features():
     n = 0
-    print("material_balance,material_count")
+    print("material_balance1,material_count1,material_balance2,material_count2")
     with open("../Raw/data_uci.pgn", "r") as f:
         for line in f:
             if re.match("[a-h1-8]{4}", line):
                 n += 1
                 moves = line.strip().split()
                 moves.pop() # We don't want the score.
-                number_of_moves = len(move)
+                number_of_moves = len(moves)
                 board = chess.Bitboard()
+                last_move = moves.pop()
                 for move in moves:
                     # This is actually an half move.
                     move=move.lower() # python.chess does not like capitals.
                     board.push(chess.Move.from_uci(move))
-                print("{},{}".format(*evaluate_position(board)))
+                set1 = "{},{}".format(*evaluate_position(board))
+                last_move = last_move.lower()
+                board.push(chess.Move.from_uci(last_move))
+                set2 = "{},{}".format(*evaluate_position(board))
+                print(set1 + "," + set2)
+
 
             # Limit (for now) the number of games that are explored.
             if limit and n == 1:
@@ -68,3 +74,4 @@ def get_position_features():
 if __name__ == '__main__':
     get_position_features()
     #print(chess.SQUARES)
+
