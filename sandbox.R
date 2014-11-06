@@ -10,10 +10,11 @@ MAE <- function (data, lev = NULL, model = NULL)
 
 #Read data
 train <- read.csv("train.csv")
-sf_train <- read.csv("sf_train.csv")
+sf <- read.csv("stockfish_converted.csv")
+sf_train <- sf[1:25000,]
 sf_train <- sf_train[,-1]
 test <- read.csv("test.csv")
-sf_test <- read.csv("sf_test.csv")
+sf_test <- sf[25001:50000,]
 sf_test <- sf_test[,-1]
 
 #Save targets
