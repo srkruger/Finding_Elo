@@ -55,8 +55,8 @@ if(FIRST_MOVE_ONE_HOT)
     test <- cbind(test, with(test,
                              data.frame(model.matrix(~FirstMove-1,test))))
     #Remove FirstMove
-    train <- train[, -2]
-    test <- test[, -2]
+    train <- train[, -1]
+    test <- test[, -1]
 }
 
 #Add stockfish features
