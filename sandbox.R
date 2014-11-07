@@ -29,7 +29,7 @@ test <- test[,-c(1, 2)]
 
 #First move
 #levels = 107 in train
-REDUCE_FIRST_MOVE_LEVELS = 8 #Reduce FirstMove factor. Must be > 0
+REDUCE_FIRST_MOVE_LEVELS = 5 #Reduce FirstMove factor. Must be > 0
 FIRST_MOVE_ONE_HOT = FALSE #One-hot encode FirstMove factor?
 
 if(REDUCE_FIRST_MOVE_LEVELS > 0)
@@ -73,55 +73,46 @@ fc <- trainControl(method = "repeatedCV", summaryFunction=MAE,
                    number = 3, repeats = 1, verboseIter=TRUE, 
                    returnResamp="all")
 
+#Set up tuning grid
+tGrid <- expand.grid(n.trees=350, interaction.depth=5, shrinkage=0.02)
+
 ############################################################################################################
 #Build a model to predict WhiteElo for White Wins
 set.seed(63951)
-#Set up tuning grid
-tGrid <- expand.grid(n.trees=300, interaction.depth=5:7, shrinkage=0.02)
 modelW_W <- train(x=train[trainResult=="W",], y=trainWhiteElo[trainResult=="W"], method="gbm", trControl=fc, 
-                tuneGrid=tGrid, metric="MAE", maximize=FALSE)
+                tuneGrid=tGrid, metric="MAE", maximize=FALSE, distribution="laplace")
 modelW_W
 
 #Build a model to predict WhiteElo for draws
 set.seed(63951)
-#Set up tuning grid
-tGrid <- expand.grid(n.trees=200, interaction.depth=5:7, shrinkage=0.02)
 modelW_D <- train(x=train[trainResult=="D",], y=trainWhiteElo[trainResult=="D"], method="gbm", trControl=fc, 
-                  tuneGrid=tGrid, metric="MAE", maximize=FALSE)
+                  tuneGrid=tGrid, metric="MAE", maximize=FALSE, , distribution="laplace")
 modelW_D
 
 #Build a model to predict WhiteElo for Black wins
 set.seed(63951)
-#Set up tuning grid
-tGrid <- expand.grid(n.trees=200, interaction.depth=5:7, shrinkage=0.02)
 modelW_B <- train(x=train[trainResult=="B",], y=trainWhiteElo[trainResult=="B"], method="gbm", trControl=fc, 
-                  tuneGrid=tGrid, metric="MAE", maximize=FALSE)
+                  tuneGrid=tGrid, metric="MAE", maximize=FALSE, distribution="laplace")
 modelW_B
 ############################################################################################################
 
 ############################################################################################################
 #Build a model to predict BlackElo for White Wins
 set.seed(63951)
-#Set up tuning grid
-tGrid <- expand.grid(n.trees=300, interaction.depth=5:7, shrinkage=0.02)
 modelB_W <- train(x=train[trainResult=="W",], y=trainBlackElo[trainResult=="W"], method="gbm", trControl=fc, 
-                  tuneGrid=tGrid, metric="MAE", maximize=FALSE)
+                  tuneGrid=tGrid, metric="MAE", maximize=FALSE, distribution="laplace")
 modelB_W
 
 #Build a model to predict BlackElo for draws
 set.seed(63951)
-#Set up tuning grid
-tGrid <- expand.grid(n.trees=200, interaction.depth=5:7, shrinkage=0.02)
 modelB_D <- train(x=train[trainResult=="D",], y=trainBlackElo[trainResult=="D"], method="gbm", trControl=fc, 
-                  tuneGrid=tGrid, metric="MAE", maximize=FALSE)
+                  tuneGrid=tGrid, metric="MAE", maximize=FALSE, distribution="laplace")
 modelB_D
 
 #Build a model to predict BlackElo for Black wins
 set.seed(63951)
-#Set up tuning grid
-tGrid <- expand.grid(n.trees=200, interaction.depth=5:7, shrinkage=0.02)
 modelB_B <- train(x=train[trainResult=="B",], y=trainBlackElo[trainResult=="B"], method="gbm", trControl=fc, 
-                  tuneGrid=tGrid, metric="MAE", maximize=FALSE)
+                  tuneGrid=tGrid, metric="MAE", maximize=FALSE, distribution="laplace")
 modelB_B
 ############################################################################################################
 
