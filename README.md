@@ -9,10 +9,8 @@ Finding_Elo
 [Rudi Kruger](http://www.kaggle.com/users/54720/rudi-kruger)
 
 
-Current leaderboard score (see sandbox.R) is 194.30507
+Current leaderboard score (see sandbox.R) is 194.03236
 
-To reproduce the score, get _train.csv_, _test.csv_, _stockfish_converted.csv_ _sf_test_.csv and _eval.csv_ from _/Processed_.
-Run _sandbox.R_, with your working directory set to where the above files are.
 You'll need the caret package(and gbm, but caret takes care of that if need be).
 
 It should be pretty easy to improve on this.

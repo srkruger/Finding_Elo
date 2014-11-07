@@ -9,32 +9,28 @@ MAE <- function (data, lev = NULL, model = NULL)
 }
 
 #Read data
-train <- read.csv("train.csv")
-sf <- read.csv("stockfish_converted.csv")
+train <- read.csv("Processed/train.csv")
+sf <- read.csv("Processed/stockfish_converted.csv")
 sf_train <- sf[1:25000,]
 sf_train <- sf_train[,-1]
-test <- read.csv("test.csv")
+test <- read.csv("Processed/test.csv")
 sf_test <- sf[25001:50000,]
 sf_test <- sf_test[,-1]
 
-#Save targets
+#Save targets and result
 trainWhiteElo <- train$WhiteElo
 trainBlackElo <- train$BlackElo
+trainResult <- train$Result
+testResult <- test$Result
 
-#Change Result and NumberOfMoves to numeric 
-train$Result <- as.numeric(train$Result)
-train$NumberOfMoves <- as.numeric(train$NumberOfMoves)
-test$Result <- as.numeric(test$Result)
-test$NumberOfMoves <- as.numeric(test$NumberOfMoves)
-
-#Remove Id and targets
-train <- train[,-c(1, 5, 6)]
-test <- test[,-1]
+#Remove Id, result and targets
+train <- train[,-c(1, 2, 5, 6)]
+test <- test[,-c(1, 2)]
 
 #First move
 #levels = 107 in train
-REDUCE_FIRST_MOVE_LEVELS = 20 #Reduce FirstMove factor. 0 for no reduction
-FIRST_MOVE_ONE_HOT = TRUE #One-hot encode factor
+REDUCE_FIRST_MOVE_LEVELS = 8 #Reduce FirstMove factor. Must be > 0
+FIRST_MOVE_ONE_HOT = FALSE #One-hot encode FirstMove factor?
 
 if(REDUCE_FIRST_MOVE_LEVELS > 0)
 {
@@ -63,30 +59,84 @@ if(FIRST_MOVE_ONE_HOT)
     test <- test[, -2]
 }
 
-#Add stockfish data
+#Add stockfish features
 train <- cbind(train, sf_train)
 test <- cbind(test, sf_test)
 
-#Add material balance and count
-mbcData <- read.csv("eval.csv")
+#Add material balance and count features
+mbcData <- read.csv("Processed/eval.csv")
 train <- cbind(train, mbcData[1:25000,])
 test <- cbind(test, mbcData[25001:50000,])
 
-#Build a model, CV to predict WhiteElo
-set.seed(63951)
+#Set up train control for 3-Fold CV
 fc <- trainControl(method = "repeatedCV", summaryFunction=MAE,
                    number = 3, repeats = 1, verboseIter=TRUE, 
                    returnResamp="all")
-tGrid <- expand.grid(n.trees=500, interaction.depth=5:7, shrinkage=0.02)
-modelW <- train(x=train, y=as.numeric(trainWhiteElo), method="gbm", trControl=fc, 
-                tuneGrid=tGrid, metric="MAE", maximize=FALSE)
-modelW
 
-#Another model, for Black this time
-modelB <- train(x=train, y=as.numeric(trainBlackElo), method="gbm", trControl=fc, 
+############################################################################################################
+#Build a model to predict WhiteElo for White Wins
+set.seed(63951)
+#Set up tuning grid
+tGrid <- expand.grid(n.trees=300, interaction.depth=5:7, shrinkage=0.02)
+modelW_W <- train(x=train[trainResult=="W",], y=trainWhiteElo[trainResult=="W"], method="gbm", trControl=fc, 
                 tuneGrid=tGrid, metric="MAE", maximize=FALSE)
-modelB
+modelW_W
+
+#Build a model to predict WhiteElo for draws
+set.seed(63951)
+#Set up tuning grid
+tGrid <- expand.grid(n.trees=200, interaction.depth=5:7, shrinkage=0.02)
+modelW_D <- train(x=train[trainResult=="D",], y=trainWhiteElo[trainResult=="D"], method="gbm", trControl=fc, 
+                  tuneGrid=tGrid, metric="MAE", maximize=FALSE)
+modelW_D
+
+#Build a model to predict WhiteElo for Black wins
+set.seed(63951)
+#Set up tuning grid
+tGrid <- expand.grid(n.trees=200, interaction.depth=5:7, shrinkage=0.02)
+modelW_B <- train(x=train[trainResult=="B",], y=trainWhiteElo[trainResult=="B"], method="gbm", trControl=fc, 
+                  tuneGrid=tGrid, metric="MAE", maximize=FALSE)
+modelW_B
+############################################################################################################
+
+############################################################################################################
+#Build a model to predict BlackElo for White Wins
+set.seed(63951)
+#Set up tuning grid
+tGrid <- expand.grid(n.trees=300, interaction.depth=5:7, shrinkage=0.02)
+modelB_W <- train(x=train[trainResult=="W",], y=trainBlackElo[trainResult=="W"], method="gbm", trControl=fc, 
+                  tuneGrid=tGrid, metric="MAE", maximize=FALSE)
+modelB_W
+
+#Build a model to predict BlackElo for draws
+set.seed(63951)
+#Set up tuning grid
+tGrid <- expand.grid(n.trees=200, interaction.depth=5:7, shrinkage=0.02)
+modelB_D <- train(x=train[trainResult=="D",], y=trainBlackElo[trainResult=="D"], method="gbm", trControl=fc, 
+                  tuneGrid=tGrid, metric="MAE", maximize=FALSE)
+modelB_D
+
+#Build a model to predict BlackElo for Black wins
+set.seed(63951)
+#Set up tuning grid
+tGrid <- expand.grid(n.trees=200, interaction.depth=5:7, shrinkage=0.02)
+modelB_B <- train(x=train[trainResult=="B",], y=trainBlackElo[trainResult=="B"], method="gbm", trControl=fc, 
+                  tuneGrid=tGrid, metric="MAE", maximize=FALSE)
+modelB_B
+############################################################################################################
 
 #Make predictions and create submission file
-submit <- data.frame(Event=25001:50000, WhiteElo=predict(modelW, test), BlackElo=predict(modelB, test))
+predsWhiteWins <- data.frame(Event=(25001:50000)[testResult=="W"], 
+                    WhiteElo=predict(modelW_W, test[testResult=="W",]),
+                    BlackElo=predict(modelB_W, test[testResult=="W",]))
+
+predsDraws <- data.frame(Event=(25001:50000)[testResult=="D"], 
+                            WhiteElo=predict(modelW_D, test[testResult=="D",]),
+                            BlackElo=predict(modelB_D, test[testResult=="D",]))
+
+predsBlackWins <- data.frame(Event=(25001:50000)[testResult=="B"], 
+                        WhiteElo=predict(modelW_B, test[testResult=="B",]),
+                        BlackElo=predict(modelB_B, test[testResult=="B",]))
+
+submit <- rbind(predsWhiteWins, predsDraws, predsBlackWins)
 write.csv(submit, file="submit.csv", row.names=FALSE)
