@@ -23,13 +23,23 @@ trainBlackElo <- train$BlackElo
 trainResult <- train$Result
 testResult <- test$Result
 
-#Remove Id, result and targets
-train <- train[,-c(1, 2, 5, 6)]
-test <- test[,-c(1, 2)]
+#Generate FirstMove and NumMoves feature from Moves
+FIRST_MOVE_SIZE = 3
+FirstMove <- gsub(" ", "", substr(as.character(train$Moves), 1, (FIRST_MOVE_SIZE * 4 + (FIRST_MOVE_SIZE - 1))))
+NumMoves <- sapply(strsplit(as.character(train$Moves), split=c(" ")), FUN=length)
+train <- cbind(train, FirstMove)
+train <- cbind(train, NumMoves)
+FirstMove <- gsub(" ", "", substr(as.character(test$Moves), 1, (FIRST_MOVE_SIZE * 4 + (FIRST_MOVE_SIZE - 1))))
+NumMoves <- sapply(strsplit(as.character(test$Moves), split=c(" ")), FUN=length)
+test <- cbind(test, FirstMove)
+test <- cbind(test, NumMoves)
+
+#Remove Event, Result, Moves and targets
+train <- train[, -(1:5)]
+test <- test[, -(1:3)]
 
 #First move
-#levels = 107 in train
-REDUCE_FIRST_MOVE_LEVELS = 5 #Reduce FirstMove factor. Must be > 0
+REDUCE_FIRST_MOVE_LEVELS = 25 #Reduce FirstMove factor. Must be > 0
 FIRST_MOVE_ONE_HOT = FALSE #One-hot encode FirstMove factor?
 
 if(REDUCE_FIRST_MOVE_LEVELS > 0)
@@ -74,7 +84,7 @@ fc <- trainControl(method = "repeatedCV", summaryFunction=MAE,
                    returnResamp="all")
 
 #Set up tuning grid
-tGrid <- expand.grid(n.trees=350, interaction.depth=5, shrinkage=0.02)
+tGrid <- expand.grid(n.trees=350, interaction.depth=7, shrinkage=0.02)
 
 ############################################################################################################
 #Build a model to predict WhiteElo for White Wins
@@ -115,6 +125,8 @@ modelB_B <- train(x=train[trainResult=="B",], y=trainBlackElo[trainResult=="B"],
                   tuneGrid=tGrid, metric="MAE", maximize=FALSE, distribution="laplace")
 modelB_B
 ############################################################################################################
+
+#TODO - Find a good way to calc CV for all models
 
 #Make predictions and create submission file
 predsWhiteWins <- data.frame(Event=(25001:50000)[testResult=="W"], 
