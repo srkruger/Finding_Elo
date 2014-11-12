@@ -23,48 +23,48 @@ trainBlackElo <- train$BlackElo
 trainResult <- train$Result
 testResult <- test$Result
 
-#Generate FirstMove and NumMoves feature from Moves
-FIRST_MOVE_SIZE = 3
-FirstMove <- gsub(" ", "", substr(as.character(train$Moves), 1, (FIRST_MOVE_SIZE * 4 + (FIRST_MOVE_SIZE - 1))))
+#Generate Opening and NumMoves feature from Moves
+OPENING_NB_MOVES = 3 #The number of moves(half?) that constitutes an opening
+Opening <- gsub(" ", "", substr(as.character(train$Moves), 1, (OPENING_NB_MOVES * 4 + (OPENING_NB_MOVES - 1))))
 NumMoves <- sapply(strsplit(as.character(train$Moves), split=c(" ")), FUN=length)
-train <- cbind(train, FirstMove)
+train <- cbind(train, Opening)
 train <- cbind(train, NumMoves)
-FirstMove <- gsub(" ", "", substr(as.character(test$Moves), 1, (FIRST_MOVE_SIZE * 4 + (FIRST_MOVE_SIZE - 1))))
+Opening <- gsub(" ", "", substr(as.character(test$Moves), 1, (OPENING_NB_MOVES * 4 + (OPENING_NB_MOVES - 1))))
 NumMoves <- sapply(strsplit(as.character(test$Moves), split=c(" ")), FUN=length)
-test <- cbind(test, FirstMove)
+test <- cbind(test, Opening)
 test <- cbind(test, NumMoves)
 
 #Remove Event, Result, Moves and targets
 train <- train[, -(1:5)]
 test <- test[, -(1:3)]
 
-#First move
-REDUCE_FIRST_MOVE_LEVELS = 25 #Reduce FirstMove factor. Must be > 0
-FIRST_MOVE_ONE_HOT = FALSE #One-hot encode FirstMove factor?
+#Opening
+NB_OPENINGS = 25 #Number of different openings to consider(includes Other). Must be > 0
+OPENING_ONE_HOT = FALSE #One-hot encode Opening factor?
 
-if(REDUCE_FIRST_MOVE_LEVELS > 0)
+if(NB_OPENINGS > 0)
 {
     #Create new levels
-    fmReducedLevels <- names(summary(train$FirstMove, maxsum=(REDUCE_FIRST_MOVE_LEVELS + 1)))[1:REDUCE_FIRST_MOVE_LEVELS]    
+    fmReducedLevels <- names(summary(train$Opening, maxsum=(NB_OPENINGS + 1)))[1:NB_OPENINGS]    
     #Create a new factor using created levels, add "Other" as a level
-    train$FirstMove <- factor(x=train$FirstMove, levels=c(fmReducedLevels, "Other"))
+    train$Opening <- factor(x=train$Opening, levels=c(fmReducedLevels, "Other"))
     #Turn NA's into "Other"
-    train$FirstMove[is.na(train$FirstMove)] <- "Other"
+    train$Opening[is.na(train$Opening)] <- "Other"
     
     #Use same levels for the factor in test
-    test$FirstMove <- factor(x=test$FirstMove, levels=levels(train$FirstMove))    
-    test$FirstMove[is.na(test$FirstMove)] <- "Other"
+    test$Opening <- factor(x=test$Opening, levels=levels(train$Opening))    
+    test$Opening[is.na(test$Opening)] <- "Other"
 }
 
 #One-hot encode
-if(FIRST_MOVE_ONE_HOT)
+if(OPENING_ONE_HOT)
 {    
     #TODO : figure out how this code works
     train <- cbind(train, with(train,
-                               data.frame(model.matrix(~FirstMove-1,train))))
+                               data.frame(model.matrix(~Opening-1,train))))
     test <- cbind(test, with(test,
-                             data.frame(model.matrix(~FirstMove-1,test))))
-    #Remove FirstMove
+                             data.frame(model.matrix(~Opening-1,test))))
+    #Remove Opening
     train <- train[, -1]
     test <- test[, -1]
 }
